@@ -1,102 +1,102 @@
-# Python files for the tmf8829 device 
+# Edge Impulse TMF8829 training and live classification interface
 
-Python version 3.10.11 or higher is required.
+Implementation of a [Edge Impulse](https://www.edgeimpulse.com/) interface for
+- Training of AI models
+- Running live classification
 
-## Virtual environment
+This interface operates on
+[TMF8829_EVM_DB_DEMO](https://ams-osram.com/products/boards-kits-accessories/kits/ams-tmf8829-evm-db-demo-evaluation-kit)
+or [TMF8829_EVM_EB_SHIELD](https://ams-osram.com/products/boards-kits-accessories/kits/ams-tmf8829-evm-eb-shield-evaluation-kit) boards.
+
+Example classification for cup detection, proof of concept, where TMF8829 is located 30 cm above the desk looking downwards - the AI model is available at Edge Impulse website: [TMF8829_48x32_cup_detection](https://studio.edgeimpulse.com/public/1037705/latest):
+
+![Demo video](./media/operation.gif)
+
+## Setup
+
+* TMF8829 EVM connected to PC - TMF8829_EVM_DB_DEMO or TMF8829_EVM_EB_SHIELD
+* [Edge Impulse](https://www.edgeimpulse.com/) account
+
+Create an API Key in https://studio.edgeimpulse.com/
+
+Goto Project Dashboard -> Keys -> New API keys, create a key and copy the key number from the browser to [tmf8829_edge_impulse.py](./tmf8829/zeromq/tmf8829_edge_impulse.py)
+
+```python
+API_KEY = "ei_<insert_key_here>"
+```
+
+For live classification to work, add a HMAC Keys as well. This key needs to have 'Set as development key' checked. The API_KEY above is not affected by the HMAC key and there is no need to copy it to these sources.
+
+## Installation
+
+### Virtual environment
 
 Recommendation is to set-up a virtual environment. Open your favourite Windows PowerShell, VisualStudio Code etc.
 To install a virtual environment named env, and use it:   
-python -m venv env    
-./env/Scripts/Activate.ps1    
+python -m venv env
+./env/Scripts/Activate.ps1
 
-## Requirements
+### Install libraries
 
-To run the scripts in this folder you need to install the packages in the requirements.txt file with:    
+Python version 3.10.11 or higher is required.
+
+To run the scripts in this folder you need to install the packages in the requirements.txt file with:
+```bash
 pip install -r requirements.txt
+```
 
-All needed python packages are in the subdirectory packages.
+All required python packages are inside the subdirectory packages.
 
-## Folder and sub-folders:
+## Usage
 
-### ./packages
-Needed python packages.
+If you are using [TMF8829_EVM_EB_SHIELD](https://ams-osram.com/products/boards-kits-accessories/kits/ams-tmf8829-evm-eb-shield-evaluation-kit), 
+start [tmf8829_zeromq_server.py](./tmf8829/zeromq/tmf8829_zeromq_server.py) first; this can be done with 
+the pre-compiled server file from [TMF8829_Driver_ZMQ_Server_Client_EXE_\<latest version\>.zip](https://ams-osram.com/tmf8829) or inside a separate shell
+```python
+python tmf8829/zeromq/tmf8829_zeromq_server.py
+```
+If you are using [TMF8829_EVM_DB_DEMO](https://ams-osram.com/products/boards-kits-accessories/kits/ams-tmf8829-evm-db-demo-evaluation-kit), 
+no additional server needs to be started.
+
+### Training data
+
+To collect training data, update label as needed in [tmf8829_edge_impulse.py](./tmf8829/zeromq/tmf8829_edge_impulse.py)
+
+```python
+# Set Training Label
+TRAINING_LABEL = 'Empty_cup'
+```
+
+To start collecting data, run [tmf8829_zeromq_training_client.py](./tmf8829/zeromq/tmf8829_zeromq_training_client.py)
+
+```python
+python tmf8829/zeromq/tmf8829_zeromq_training_client.py
+```
+
+This will automatically copy the collected and labeled training data to the Edge Impulse project defined by the API_KEY.
+
+### Live classification
+
+First start the client [tmf8829_live_classification.py](./tmf8829/zeromq/tmf8829_live_classification.py)
+```python
+python tmf8829/zeromq/tmf8829_live_classification.py
+```
+
+Go to the Edge Impulse project and connect to the TMF8829 device:
+
+![Live classification](./media/live_classification.png)
+
+### Visualization on the PC
+
+The EVM GUI can be used in parallel to this application, but needs to be started AFTERWARDS.
+
+### Configuration
+
+Update file [cfg_client.json](./tmf8829/zeromq/cfg_client.json) with following examples:
+- Parameter **period** [in ms] to modify speed of detection. 
+- Parameter **iterations** [in k iterations] is used to change performance of detection
 
 
-### ./tmf8829
-All python classes, files and functions, specific to the TMF8829.
+# Info
 
-##### tmf8829_application.py, tmf8829_application_common.py and tmf8829_bootloader.py:
-The application and bootloader classes have the functionality to control the device hardware and the bootloader and also allows to download intel hex files to the device, measurements and the reading of result and histogram frames.
-
-##### tmf8829_application defines.py:
-Application specific defines and structures.
-
-##### tmf8829_conv.py:
-Contains convenience functions.
-
-#### Python register files
-
-##### tmf8829_host_regs.py 
-The registers of the Tmf8829 which could be written over I2C or SPI.
-
-##### tmf8829_application_registers.py:
-Application specific registers.
-
-##### tmf8829_config_page.py:
-Application configuration register page.
-
-### ./tmf8829/examples
-Several examples that show the usage of how to:
-- use the application printer to see results/frames in the terminal
-- visualize pixel results or histograms 
-- log data into a file with json format.
-
-### ./tmf8829/utilities
-
-##### tmf8829_application_printer.py:
-The application printer class supports the printing of the results and histogram frames.
-
-##### tmf8829_json_2_csv.py
-Convert log files from json format to csv format
-
-##### tmf8829_logger_service.py
-Provides functionality to dump the data into a file with json format or to log data into a textfile.
-
-
-##### tmf8829_visualisation.py
-Functionality to visualize pixel data or histograms.
-
-### ./tmf8829/zeromq
-
-zeroMQ is an open source universal messaging library.
-zeroMq server implementations for the tmf8829 EVMs are available and for host interaction a zeroMq client.
-
-##### TMF8829_zeromq_protocol.md
-The protocol description.
-
-##### tmf8829_host_com_reg.py
-The definition of the protocol header.
-
-##### tmf8829_zeromq_common.py
-Common functions for the client and server.
-
-##### tmf8829_zeromq_client.py
-Client that could be used as active or passive logger
-
-##### tmf8829_zeromq_server_core.py
-Common functions for the different server scripts.
-
-##### tmf8829_zeromq_server.py
-Server for the EVM shield board.
-
-##### tmf8829_zeromq_server_linux.py
-Server for the evm linux board.
-
-##### tmf8829_zeromq_server_arduino.py
-Server for the Arduino board.
-
-##### cfg_client.json
-TMF8829 configuration for active logging and general logging parameters.
-
-##### cfg_server.json
-TMF8829 configuration at startup of the server.
+This is a fork of [tmf8829_driver_python](https://github.com/ams-OSRAM/tmf8829_driver_python) modifying files to create an application, which can run together with TMF8829_EVM_DB_DEMO or TMF8829_EVM_EB_SHIELD.

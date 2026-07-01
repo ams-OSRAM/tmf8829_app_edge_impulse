@@ -1,8 +1,9 @@
 {
-    "preconfig": "CMD_LOAD_CFG_16X16",
+    "preconfig": "CMD_LOAD_CFG_48X32",
     "measure_cfg": {
-        "period": 33,                 
-        "iterations": 600                             
+        "period": 100,
+        "iterations": 8000
     },
+    "log_data": 0,
     "record_frames":3
 }

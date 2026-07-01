@@ -11,3 +11,7 @@ numpy
 pyzmq
 pyinstaller
 pytest
+
+# for tmf8829/zeromq/tmf8829_live_classification.py
+websockets
+requests
